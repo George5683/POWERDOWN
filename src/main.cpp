@@ -31,6 +31,8 @@ void IRAM_ATTR buttonISR() {
     vTaskResume(BlinkTaskHandle);
     Serial.println("BlinkTask Resumed");
   }
+
+  // Send signal to IR to turn off TV
 }
 
 void BlinkTask(void *parameter) {
