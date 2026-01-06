@@ -1,29 +1,78 @@
 #include <Arduino.h>
-// DEFINE THE GPIO PIN where the LED is connected
-#define LED_PIN 2
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
+#define LED1_PIN 2
+#define BUTTON_PIN 23
 
-void blink(){
-  digitalWrite(LED_PIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(1000);                       // wait for a second
-  digitalWrite(LED_PIN, LOW);    // turn the LED off by making the voltage LOW
-  delay(1000);                       // wait for a second
+// Task handle
+TaskHandle_t BlinkTaskHandle = NULL;
+
+// Volatile variables for ISR
+volatile bool taskSuspended = false;
+volatile uint32_t lastInterruptTime = 0;
+const uint32_t debounceDelay = 100; // debounce period
+
+// ISR for button press
+void IRAM_ATTR buttonISR() {
+  // Debounce
+  uint32_t currentTime = millis();
+  if (currentTime - lastInterruptTime < debounceDelay) {
+    return;
+  }
+  lastInterruptTime = currentTime;
+
+  // Toggle task state
+  taskSuspended = !taskSuspended;
+  if (taskSuspended) {
+    vTaskSuspend(BlinkTaskHandle);
+    Serial.println("BlinkTask Suspended");
+  } else {
+    vTaskResume(BlinkTaskHandle);
+    Serial.println("BlinkTask Resumed");
+  }
+}
+
+void BlinkTask(void *parameter) {
+  for (;;) { // Infinite loop
+    digitalWrite(LED1_PIN, HIGH);
+    Serial.println("BlinkTask: LED ON");
+    vTaskDelay(1000 / portTICK_PERIOD_MS); // 1000ms
+    digitalWrite(LED1_PIN, LOW);
+    Serial.println("BlinkTask: LED OFF");
+    Serial.print("BlinkTask running on core ");
+    Serial.println(xPortGetCoreID());
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    Serial.printf("Task1 Stack Free: %u bytes\n", uxTaskGetStackHighWaterMark(NULL));
+
+  }
 }
 
 void setup() {
-  // Start the serial monitor
-  Serial.begin(9600);
+  Serial.begin(115200);
 
-  // Initialize LED pin to be an output
-  pinMode(LED_PIN, OUTPUT);
+  Serial.printf("Starting FreeRTOS: Memory Usage\nInitial Free Heap: %u bytes\n", xPortGetFreeHeapSize());
 
-  // Print a message to the serial monitor indicating setup has started
-  Serial.println("Setup started");
+
+  // Initialize pins
+  pinMode(LED1_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP); // Internal pull-up resistor
+
+  // Attach interrupt to button
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
+
+  // Create task
+  xTaskCreatePinnedToCore(
+    BlinkTask,         // Task function
+    "BlinkTask",       // Task name
+    10000,             // Stack size (bytes)
+    NULL,              // Parameters
+    1,                 // Priority
+    &BlinkTaskHandle,  // Task handle
+    1                  // Core 1
+  );
 }
 
 void loop() {
-  Serial.println("Blinking LED");
-  while(true){
-    blink();
-  }
+  // Empty because FreeRTOS scheduler runs the task
 }
