@@ -7,6 +7,8 @@
 
 // Task handle
 TaskHandle_t BlinkTaskHandle = NULL;
+TaskHandle_t PowerTaskHandle = NULL;
+
 
 // Volatile variables for ISR
 volatile bool taskSuspended = false;
@@ -50,6 +52,10 @@ void BlinkTask(void *parameter) {
   }
 }
 
+void SwitchPower(void *parameter){
+  // Power ON/OFF
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -71,6 +77,16 @@ void setup() {
     NULL,              // Parameters
     1,                 // Priority
     &BlinkTaskHandle,  // Task handle
+    1                  // Core 1
+  );
+
+  xTaskCreatePinnedToCore(
+    SwitchPower,         // Task function
+    "Power",       // Task name
+    10000,             // Stack size (bytes)
+    NULL,              // Parameters
+    1,                 // Priority
+    &PowerTaskHandle,  // Task handle
     1                  // Core 1
   );
 }
