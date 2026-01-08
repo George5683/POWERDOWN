@@ -5,36 +5,67 @@
 #define LED1_PIN 2
 #define BUTTON_PIN 23
 
+// Flags 
+volatile bool Button_Flag = false;
+volatile bool IR_Flag = false;
+volatile bool Blink_Flag = false;
 // Task handle
 TaskHandle_t BlinkTaskHandle = NULL;
 TaskHandle_t PowerTaskHandle = NULL;
+TaskHandle_t SerialTaskHandle = NULL;
 
+// Creating the queue
+QueueHandle_t isrQueue;
+// int value = 1;
+// xQueueSendFromISR(isrQueue, &value, NULL);
+// xQueueReceive(isrQueue, &value, portMAX_DELAY)
 
 // Volatile variables for ISR
 volatile bool taskSuspended = false;
 volatile uint32_t lastInterruptTime = 0;
 const uint32_t debounceDelay = 100; // debounce period
 
+void SerialTask(void *parameter) {
+  if (Blink_Flag) {
+    Serial.println("SerialTask: Blinking is ON");
+  } else {
+    Serial.println("SerialTask: Blinking is OFF");
+  }
+
+  if (Button_Flag) {
+    Serial.println("SerialTask: Button was pressed");
+    Button_Flag = false;
+  }
+}
+
+// Fast ISR to toggle task state
+void IRAM_ATTR buttonISRfast(){
+  BaseType_t higherPriorityTaskWoken = pdFALSE;
+  // Toggle task state
+  taskSuspended = !taskSuspended;
+  if (taskSuspended) {
+    vTaskSuspend(BlinkTaskHandle);
+    Blink_Flag = false;
+  } else {
+    vTaskResume(BlinkTaskHandle);
+    Blink_Flag = true;
+  }
+  // notify SerialTask
+  vTaskNotifyGiveFromISR(SerialTaskHandle, &higherPriorityTaskWoken);
+  if (higherPriorityTaskWoken) {
+    portYIELD_FROM_ISR();
+  }
+}
+
 // ISR for button press
-void IRAM_ATTR buttonISR() {
-  // Debounce
+void IRAM_ATTR buttonISRHandler() {
+  // Debounce the button press
   uint32_t currentTime = millis();
   if (currentTime - lastInterruptTime < debounceDelay) {
     return;
   }
   lastInterruptTime = currentTime;
-
-  // Toggle task state
-  taskSuspended = !taskSuspended;
-  if (taskSuspended) {
-    vTaskSuspend(BlinkTaskHandle);
-    Serial.println("BlinkTask Suspended");
-  } else {
-    vTaskResume(BlinkTaskHandle);
-    Serial.println("BlinkTask Resumed");
-  }
-
-  // Send signal to IR to turn off TV
+  buttonISRfast();
 }
 
 void BlinkTask(void *parameter) {
@@ -52,7 +83,7 @@ void BlinkTask(void *parameter) {
   }
 }
 
-void SwitchPower(void *parameter){
+void Powerfunction(void *parameter){
   // Power ON/OFF
 }
 
@@ -61,34 +92,44 @@ void setup() {
 
   Serial.printf("Starting FreeRTOS: Memory Usage\nInitial Free Heap: %u bytes\n", xPortGetFreeHeapSize());
 
-
   // Initialize pins
   pinMode(LED1_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP); // Internal pull-up resistor
 
-  // Attach interrupt to button
-  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
-
-  // Create task
+  // Create task for blinking LED
   xTaskCreatePinnedToCore(
     BlinkTask,         // Task function
     "BlinkTask",       // Task name
     10000,             // Stack size (bytes)
     NULL,              // Parameters
-    1,                 // Priority
+    4,                 // Priority
     &BlinkTaskHandle,  // Task handle
     1                  // Core 1
   );
 
+  // Create task for using the IR sensor to power ON/OFF televisions
   xTaskCreatePinnedToCore(
-    SwitchPower,         // Task function
-    "Power",       // Task name
+    Powerfunction,         // Task function
+    "PowerTask",       // Task name
     10000,             // Stack size (bytes)
     NULL,              // Parameters
-    1,                 // Priority
+    5,                 // Priority
     &PowerTaskHandle,  // Task handle
     1                  // Core 1
   );
+
+  xTaskCreatePinnedToCore(
+    SerialTask,
+    "SerialTask",
+    4096,
+    NULL,
+    5,
+    &SerialTaskHandle,
+    1
+  );
+
+  // Attach interrupt to button
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISRHandler, FALLING);
 }
 
 void loop() {
