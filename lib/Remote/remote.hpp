@@ -1,9 +1,10 @@
 #include <string>
+#include <IRremote.hpp>
 
 class remote{
     protected:
     std::string Brand;
-    remote(std::string brandname);
+    remote(std::string brandname, int IR_PIN);
 
 public:
     virtual ~remote();
@@ -24,14 +25,24 @@ public:
     virtual void TV_7() = 0;
     virtual void TV_8() = 0;
     virtual void TV_9() = 0;
+    virtual void TV_SMART_MENU() = 0;
+    virtual void TV_UP() = 0;
+    virtual void TV_DOWN() = 0;
+    virtual void TV_LEFT() = 0;
+    virtual void TV_RIGHT() = 0;
+    virtual void TV_SELECT() = 0;
+    virtual void TV_EXIT() = 0;
+    virtual void TV_RETURN() = 0;
+    virtual void TV_SOURCE() = 0;
     std::string getBrand() const;
 };
 
 class Samsung : public remote{
     private:
+    uint16_t address = 0x7;
 
     public:
-        Samsung();
+        Samsung(int IR_PIN);
         ~Samsung();
 
         void TV_ON() override;
@@ -51,14 +62,16 @@ class Samsung : public remote{
         void TV_7() override;
         void TV_8() override;
         void TV_9() override;
+        void TV_SMART_MENU() override;
 
 };
 
 class LG : public remote{
     private:
+    uint16_t address = 0x20DF;
 
     public:
-        LG();
+        LG(int IR_PIN);
         ~LG();
 
         void TV_ON() override;
@@ -78,5 +91,5 @@ class LG : public remote{
         void TV_7() override;
         void TV_8() override;
         void TV_9() override;
-
+        void TV_SMART_MENU() override;
 };

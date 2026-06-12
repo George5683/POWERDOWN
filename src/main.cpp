@@ -1,16 +1,35 @@
 #include <Arduino.h>
+#include <IRremote.hpp>
 
 // GPIO 2 is the onboard LED for most ESP32 DevModules
-#define LED_PIN 2
+#define IR_R_PIN 18
+#define IR_T_PIN 5
 
 void setup() {
+    // Start Serial for terminal output 
+    Serial.begin(115200);
+
     // Set the pin mode to output
-    pinMode(LED_PIN, OUTPUT);
+    pinMode(IR_R_PIN, INPUT);
+    pinMode(IR_T_PIN, OUTPUT);
+
+    IrReceiver.begin(IR_R_PIN);
 }
 
 void loop() {
-    digitalWrite(LED_PIN, HIGH);
-    delay(500); // 500ms for a faster blink
-    digitalWrite(LED_PIN, LOW);
-    delay(500);
+    if (IrReceiver.decode())
+    {
+        Serial.print("Protocol: ");
+        Serial.println(getProtocolString(IrReceiver.decodedIRData.protocol));
+
+        Serial.print("Address: 0x");
+        Serial.println(IrReceiver.decodedIRData.address, HEX);
+
+        Serial.print("Command: 0x");
+        Serial.println(IrReceiver.decodedIRData.command, HEX);
+
+        Serial.println();
+
+        IrReceiver.resume(); // Ready for next code
+    }
 }
