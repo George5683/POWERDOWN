@@ -1,4 +1,6 @@
 #include "remote.hpp"
+#include <IRProtocol.h>
+#include <IRremoteInt.h>
 // _____________________________Remote Class_______________________________________________
 remote::remote(std::string brandname, int IR_PIN) : Brand(brandname) {
     IrSender.begin(IR_PIN);
@@ -89,6 +91,42 @@ void Samsung::TV_9() {
     IrSender.sendSamsung(address, 0xE, 0);
 }
 
+void Samsung::TV_SMART_MENU() {
+    IrSender.sendSamsung(address, 0x1A, 0);
+}
+
+void Samsung::TV_UP() {
+    IrSender.sendSamsung(address, 0x1E, 0);
+}
+
+void Samsung::TV_DOWN() {
+    IrSender.sendSamsung(address, 0x1F, 0);
+}   
+
+void Samsung::TV_LEFT() {
+    IrSender.sendSamsung(address, 0x1D, 0);
+}
+
+void Samsung::TV_RIGHT() {
+    IrSender.sendSamsung(address, 0x1C, 0);
+}
+
+void Samsung::TV_SELECT() {
+    IrSender.sendSamsung(address, 0x1B, 0);
+}
+
+void Samsung::TV_EXIT() {
+    IrSender.sendSamsung(address, 0x1A, 0);
+}
+
+void Samsung::TV_RETURN() {
+    IrSender.sendSamsung(address, 0x1A, 0);
+}
+
+void Samsung::TV_SOURCE() {
+    IrSender.sendSamsung(address, 0x1A, 0);
+}
+
 // _____________________________LG Class_______________________________________________
 LG::LG(int IR_PIN) : remote("LG", IR_PIN) {
     // Constructor
@@ -98,69 +136,107 @@ LG::~LG() {
     // Destructor implementation
 }
 void LG::TV_ON() {
-    IrSender.sendLG(address, 0x20DF10EF, 0);
+    // 0x20DF10EF becomes address: 0x20DF, command: 0x10
+    IrSender.sendLG(address, 0x10, 0); 
 }
 
 void LG::TV_OFF() {
-    IrSender.sendLG(address, 0x20DF906F, 0);
+    // 0x20DF906F becomes address: 0x20DF, command: 0x90
+    IrSender.sendLG(address, 0x90, 0); 
 }
 
 void LG::TV_VOL_UP() {
-    IrSender.sendLG(address, 0x20DF40BF, 0);
+    IrSender.sendLG(address, 0x40, 0); 
 }
 
 void LG::TV_VOL_DOWN() {
-    IrSender.sendLG(address, 0x20DFC03F, 0);
+    IrSender.sendLG(address, 0xC0, 0); 
 }
 
 void LG::TV_CH_UP() {
-    IrSender.sendLG(address, 0x20DF807F, 0);
+    IrSender.sendLG(address, 0x80, 0); 
 }
 
 void LG::TV_CH_DOWN() {
-    IrSender.sendLG(address, 0x20DF20DF, 0);
+    IrSender.sendLG(address, 0x20, 0); 
 }
 
 void LG::TV_MUTE() {
-    IrSender.sendLG(address, 0x20DFF00F, 0);
+    IrSender.sendLG(address, 0xF0, 0); 
 }
 
 void LG::TV_0() {
-    IrSender.sendLG(address, 0x20DF609F, 0);
+    IrSender.sendLG(address, 0x60, 0);
 }
 
 void LG::TV_1() {
-    IrSender.sendLG(address, 0x20DF00FF, 0);
+    IrSender.sendLG(address, 0x00, 0);
 }
 
 void LG::TV_2() {
-    IrSender.sendLG(address, 0x20DF20DF, 0);
+    IrSender.sendLG(address, 0x20, 0);
 }
 
 void LG::TV_3() {
-    IrSender.sendLG(address, 0x20DFA05F, 0);
+    IrSender.sendLG(address, 0xA0, 0);
 }
 
 void LG::TV_4() {
-    IrSender.sendLG(address, 0x20DF609F, 0);
+    IrSender.sendLG(address, 0x60, 0);
 }
 
 void LG::TV_5() {
-    IrSender.sendLG(address, 0x20DFE01F, 0);
+    IrSender.sendLG(address, 0xE0, 0);
 }
 
 void LG::TV_6() {
-    IrSender.sendLG(address, 0x20DF10EF, 0);
+    IrSender.sendLG(address, 0x10, 0);
 }
 
 void LG::TV_7() {
-    IrSender.sendLG(address, 0x20DF906F, 0);
+    IrSender.sendLG(address, 0x90, 0);
 }
 
 void LG::TV_8() {
-    IrSender.sendLG(address, 0x20DF48B7, 0);
+    IrSender.sendLG(address, 0x48, 0);
 }
 
 void LG::TV_9() {
-    IrSender.sendLG(address, 0x20DFC837, 0);
+    IrSender.sendLG(address, 0xC8, 0);
+}
+
+void LG::TV_SMART_MENU() {
+    IrSender.sendLG(address, 0x88, 0);
+}
+
+void LG::TV_UP() {
+    IrSender.sendLG(address, 0x08, 0);
+}
+
+void LG::TV_DOWN() {
+    IrSender.sendLG(address, 0x88, 0);
+}
+
+void LG::TV_LEFT() {
+    IrSender.sendLG(address, 0x04, 0);
+}
+
+void LG::TV_RIGHT() {
+    IrSender.sendLG(address, 0x84, 0);
+}
+
+void LG::TV_SELECT() {
+    IrSender.sendLG(address, 0x44, 0);
+}
+
+void LG::TV_EXIT() {
+    IrSender.sendLG(address, 0x88, 0);
+}
+
+void LG::TV_RETURN() {
+    IrSender.sendLG(address, 0x88, 0);
+}
+
+void LG::TV_SOURCE() {
+    IrSender.sendLG(address, 0x88, 0);
 }
